@@ -9,13 +9,13 @@
     :root {
       --bg: #0d0b0e;
       --surface: #111018;
-      --border: #26222e;
+      --border: #251f2e;
       --accent: #c8ff00;
       --accent2: #ff3c6e;
       --accent3: #9b6dff;
       --text: #e8e0f0;
-      --muted: #5c5268;
-      --dim: #2e2938;
+      --muted: #5c5168;
+      --card-hover: #17121f;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -30,370 +30,320 @@
       cursor: crosshair;
     }
 
-    /* grain */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-      opacity: 0.028;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.045;
       pointer-events: none;
       z-index: 9999;
     }
 
-    /* scanlines */
     body::after {
       content: '';
       position: fixed;
       inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent 0px,
-        transparent 3px,
-        rgba(0,0,0,0.07) 3px,
-        rgba(0,0,0,0.07) 4px
-      );
+      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px);
       pointer-events: none;
       z-index: 9998;
     }
 
-    .wrapper {
+    .wrap {
       max-width: 1080px;
       margin: 0 auto;
-      padding: 0 28px 100px;
+      padding: 0 28px 120px;
     }
 
-    /* ─── HEADER ─── */
     header {
       padding: 72px 0 56px;
       border-bottom: 1px solid var(--border);
       margin-bottom: 64px;
       position: relative;
-      animation: fadeUp 0.4s ease both;
     }
 
     .eyebrow {
       font-family: 'Cutive Mono', monospace;
       font-size: 10px;
-      letter-spacing: 0.45em;
+      letter-spacing: 0.35em;
       color: var(--muted);
       text-transform: uppercase;
       margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .eyebrow::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
+      animation: fadeup 0.6s ease both;
     }
 
     h1 {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(60px, 12vw, 124px);
-      line-height: 0.88;
+      font-size: clamp(64px, 10vw, 120px);
+      line-height: 0.9;
       letter-spacing: 0.02em;
       color: var(--text);
+      animation: fadeup 0.6s 0.1s ease both;
     }
 
     h1 .slash { color: var(--accent); }
 
     h1 .sub {
       display: block;
-      font-size: clamp(26px, 4.5vw, 50px);
+      font-size: clamp(28px, 4vw, 48px);
       color: var(--muted);
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
     }
 
     .header-desc {
-      margin-top: 28px;
+      margin-top: 24px;
       font-size: 11px;
       color: var(--muted);
-      letter-spacing: 0.1em;
-      max-width: 440px;
-      line-height: 2;
+      letter-spacing: 0.08em;
+      max-width: 420px;
+      line-height: 1.9;
+      animation: fadeup 0.6s 0.2s ease both;
     }
 
-    .header-meta {
+    .header-line {
       position: absolute;
-      top: 72px;
-      right: 0;
-      text-align: right;
-      font-family: 'Cutive Mono', monospace;
-      font-size: 10px;
-      color: var(--dim);
-      line-height: 2.2;
+      bottom: -1px; left: 0;
+      width: 80px; height: 2px;
+      background: var(--accent);
     }
 
-    .status-dot {
-      display: inline-block;
-      width: 6px;
-      height: 6px;
+    .blink {
+      animation: blink 1.1s step-end infinite;
+      color: var(--accent);
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Cutive Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      margin-top: 24px;
+    }
+    .dot {
+      width: 6px; height: 6px;
       border-radius: 50%;
       background: var(--accent);
-      margin-right: 6px;
-      animation: pulse 2.4s ease-in-out infinite;
+      animation: pulse 2s ease-in-out infinite;
     }
-
     @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.15; }
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(200,255,0,0.4); }
+      50% { opacity: 0.7; box-shadow: 0 0 0 5px rgba(200,255,0,0); }
     }
 
-    /* ─── GRID ─── */
-    .grid-label {
+    .section-label {
       font-family: 'Cutive Mono', monospace;
       font-size: 10px;
-      letter-spacing: 0.4em;
-      color: var(--muted);
+      letter-spacing: 0.3em;
+      color: var(--accent);
       text-transform: uppercase;
-      margin-bottom: 24px;
+      margin-bottom: 28px;
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
     }
-
-    .grid-label::before { content: '//'; color: var(--accent); }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
 
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 2px;
+      margin-bottom: 80px;
     }
 
-    /* ─── CARD ─── */
     .card {
+      position: relative;
       background: var(--surface);
       border: 1px solid var(--border);
-      padding: 36px 32px 30px;
+      padding: 32px 28px 28px;
       text-decoration: none;
       color: inherit;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      position: relative;
+      gap: 12px;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s;
       overflow: hidden;
-      transition: border-color 0.2s, background 0.2s;
-      cursor: crosshair;
-      animation: fadeUp 0.5s ease both;
+      animation: fadeup 0.5s ease both;
     }
 
-    .card:nth-child(1) { animation-delay: 0.06s; }
-    .card:nth-child(2) { animation-delay: 0.12s; }
-    .card:nth-child(3) { animation-delay: 0.18s; }
-    .card:nth-child(4) { animation-delay: 0.24s; }
-    .card:nth-child(5) { animation-delay: 0.30s; }
-    .card:nth-child(6) { animation-delay: 0.36s; }
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.10s; }
+    .card:nth-child(3) { animation-delay: 0.15s; }
+    .card:nth-child(4) { animation-delay: 0.20s; }
+    .card:nth-child(5) { animation-delay: 0.25s; }
+    .card:nth-child(6) { animation-delay: 0.30s; }
 
     .card::before {
       content: '';
       position: absolute;
-      inset: 0;
-      opacity: 0;
-      transition: opacity 0.3s;
-      background: radial-gradient(ellipse at top left, var(--card-glow, rgba(200,255,0,0.04)), transparent 65%);
+      top: 0; left: 0;
+      width: 3px; height: 100%;
+      background: var(--card-accent, var(--accent));
+      transform: scaleY(0);
+      transform-origin: bottom;
+      transition: transform 0.25s ease;
     }
 
-    .card:hover { border-color: var(--card-accent, var(--accent)); background: #14111b; }
-    .card:hover::before { opacity: 1; }
+    .card:hover {
+      background: var(--card-hover);
+      border-color: #3a3048;
+      transform: translateY(-2px);
+    }
 
-    /* corner triangle */
+    .card:hover::before { transform: scaleY(1); }
+
     .card::after {
-      content: '';
+      content: attr(data-index);
       position: absolute;
-      top: -1px;
-      right: -1px;
-      width: 0; height: 0;
-      border-style: solid;
-      border-width: 0 16px 16px 0;
-      border-color: transparent var(--card-accent, var(--accent)) transparent transparent;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-    .card:hover::after { opacity: 1; }
-
-    .card-index {
-      font-family: 'Cutive Mono', monospace;
-      font-size: 10px;
-      color: var(--muted);
-      letter-spacing: 0.2em;
-    }
-
-    .card-name {
+      top: 14px; right: 18px;
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 40px;
+      font-size: 48px;
+      color: rgba(255,255,255,0.025);
+      line-height: 1;
+      pointer-events: none;
+      transition: color 0.2s;
+    }
+    .card:hover::after { color: rgba(255,255,255,0.05); }
+
+    .card-tag {
+      font-family: 'Cutive Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.25em;
+      color: var(--card-accent, var(--accent));
+      text-transform: uppercase;
+    }
+
+    .card-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 36px;
       letter-spacing: 0.04em;
       line-height: 1;
       color: var(--text);
-      transition: color 0.2s;
-    }
-
-    .card:hover .card-name { color: var(--card-accent, var(--accent)); }
-
-    .card-tag {
-      display: inline-block;
-      font-family: 'Cutive Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 0.3em;
-      text-transform: uppercase;
-      color: var(--card-accent, var(--accent));
-      border: 1px solid currentColor;
-      padding: 3px 8px;
-      width: fit-content;
-      opacity: 0.65;
     }
 
     .card-desc {
-      font-size: 11px;
+      font-size: 10px;
+      line-height: 1.8;
       color: var(--muted);
-      line-height: 1.85;
-      letter-spacing: 0.03em;
-      margin-top: 4px;
+      flex: 1;
     }
 
     .card-arrow {
-      margin-top: auto;
-      padding-top: 22px;
       font-size: 10px;
-      color: var(--muted);
-      letter-spacing: 0.25em;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: color 0.2s, gap 0.25s;
+      color: var(--card-accent, var(--accent));
+      letter-spacing: 0.2em;
+      margin-top: 8px;
+      transition: letter-spacing 0.2s;
     }
+    .card:hover .card-arrow { letter-spacing: 0.35em; }
 
-    .card:hover .card-arrow { color: var(--card-accent, var(--accent)); gap: 18px; }
-
-    .card-arrow::before {
-      content: '';
-      flex: 0 0 36px;
-      height: 1px;
-      background: currentColor;
-      transition: flex-basis 0.3s;
-    }
-
-    .card:hover .card-arrow::before { flex-basis: 56px; }
-
-    /* ─── ACCENT THEMES ─── */
-    .card-glyphrot  { --card-accent: #c8ff00; --card-glow: rgba(200,255,0,0.05); }
-    .card-persona   { --card-accent: #ff3c6e; --card-glow: rgba(255,60,110,0.05); }
-    .card-velvet    { --card-accent: #9b6dff; --card-glow: rgba(155,109,255,0.06); }
-    .card-notepad   { --card-accent: #00d4ff; --card-glow: rgba(0,212,255,0.05); }
-    .card-pageforge { --card-accent: #ff9500; --card-glow: rgba(255,149,0,0.05); }
-    .card-vibe      { --card-accent: #ff3c6e; --card-glow: rgba(255,60,110,0.05); }
-
-    /* ─── FOOTER ─── */
     footer {
-      margin-top: 80px;
-      padding-top: 28px;
       border-top: 1px solid var(--border);
+      padding-top: 32px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-family: 'Cutive Mono', monospace;
-      font-size: 10px;
-      color: var(--muted);
-      letter-spacing: 0.18em;
       flex-wrap: wrap;
-      gap: 10px;
-      opacity: 0.5;
+      gap: 16px;
     }
 
-    /* ─── KEYFRAMES ─── */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
+    .footer-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+    .footer-logo span { color: var(--accent); }
+
+    .footer-note {
+      font-family: 'Cutive Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+    }
+
+    @keyframes fadeup {
+      from { opacity: 0; transform: translateY(16px); }
       to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ─── MOBILE ─── */
-    @media (max-width: 600px) {
-      .header-meta { display: none; }
-      .grid { grid-template-columns: 1fr; }
-      .card-name { font-size: 34px; }
     }
   </style>
 </head>
 <body>
-  <div class="wrapper">
+  <div class="wrap">
 
     <header>
-      <div class="eyebrow">GRUNGEPUNK COLLECTIVE &nbsp;·&nbsp; ALL TOOLS</div>
+      <p class="eyebrow">GRUNGEPUNK.GITHUB.IO &nbsp;—&nbsp; ALL TOOLS</p>
       <h1>
         GRUNGE<span class="slash">//</span>PUNK
-        <span class="sub">APP HUB</span>
+        <span class="sub">APP HUB<span class="blink">_</span></span>
       </h1>
       <p class="header-desc">
-        A collection of hand-built tools, toys, and experiments.<br>
-        Raw. Functional. Yours.
+        A collection of weird little tools built for making, breaking, and vibing.
+        Pick something and go.
       </p>
-      <div class="header-meta">
-        <span class="status-dot"></span>LIVE<br>
-        grungepunk.github.io<br>
-        6 TOOLS DEPLOYED
-      </div>
+      <div class="status"><div class="dot"></div> 6 TOOLS DEPLOYED</div>
+      <div class="header-line"></div>
     </header>
 
-    <div class="grid-label">TOOLS &amp; APPS</div>
+    <p class="section-label">TOOLS</p>
 
     <div class="grid">
 
-      <a class="card card-glyphrot" href="https://grungepunk.github.io/glyphrot">
-        <span class="card-index">01 ——</span>
-        <span class="card-name">GLYPHROT</span>
-        <span class="card-tag">Text Styler</span>
-        <p class="card-desc">Unicode text transformer. Corrupt, distort, and mutate your words into something that shouldn't exist.</p>
-        <span class="card-arrow">LAUNCH</span>
+      <a class="card" href="https://grungepunk.github.io/glyphrot" data-index="01" style="--card-accent:#c8ff00;">
+        <span class="card-tag">TEXT // STYLE</span>
+        <div class="card-title">GLYPHROT</div>
+        <p class="card-desc">Unicode text styler. Corrupt, distort, and mutate your words into something unholy.</p>
+        <div class="card-arrow">OPEN →</div>
       </a>
 
-      <a class="card card-persona" href="https://grungepunk.github.io/persona-chat">
-        <span class="card-index">02 ——</span>
-        <span class="card-name">PERSONA<span style="font-size:0.55em;opacity:0.5">//</span>CHAT</span>
-        <span class="card-tag">OC Chat</span>
-        <p class="card-desc">Chat with custom original characters. Load a persona, start talking. Your OCs, alive and weird.</p>
-        <span class="card-arrow">LAUNCH</span>
+      <a class="card" href="https://grungepunk.github.io/persona-chat" data-index="02" style="--card-accent:#9b6dff;">
+        <span class="card-tag">OC // CHAT</span>
+        <div class="card-title">PERSONA<br>//CHAT</div>
+        <p class="card-desc">Chat with your custom OCs directly in the browser. Powered by the Anthropic API.</p>
+        <div class="card-arrow">OPEN →</div>
       </a>
 
-      <a class="card card-velvet" href="https://grungepunk.github.io/velvet-room">
-        <span class="card-index">03 ——</span>
-        <span class="card-name">THE VELVET ROOM</span>
-        <span class="card-tag">Blackjack</span>
-        <p class="card-desc">A moody blackjack den with Wild Card Mode. Deal in. The house has taste.</p>
-        <span class="card-arrow">LAUNCH</span>
+      <a class="card" href="https://grungepunk.github.io/velvet-room" data-index="03" style="--card-accent:#ff3c6e;">
+        <span class="card-tag">GAME // CARDS</span>
+        <div class="card-title">THE VELVET ROOM</div>
+        <p class="card-desc">Blackjack with Wild Card Mode and a dripping-dark aesthetic. House always wins. Maybe.</p>
+        <div class="card-arrow">OPEN →</div>
       </a>
 
-      <a class="card card-notepad" href="https://grungepunk.github.io/notepad">
-        <span class="card-index">04 ——</span>
-        <span class="card-name">NOTEPAD</span>
-        <span class="card-tag">Editor</span>
-        <p class="card-desc">A minimal, distraction-free writing surface. Grungepunk-flavoured. Just you and the text.</p>
-        <span class="card-arrow">LAUNCH</span>
+      <a class="card" href="https://grungepunk.github.io/notepad" data-index="04" style="--card-accent:#ff9f3c;">
+        <span class="card-tag">UTIL // WRITE</span>
+        <div class="card-title">NOTEPAD</div>
+        <p class="card-desc">A grungepunk notepad. Just type. No distractions, no nonsense, no Comic Sans.</p>
+        <div class="card-arrow">OPEN →</div>
       </a>
 
-      <a class="card card-pageforge" href="https://grungepunk.github.io/pageforge">
-        <span class="card-index">05 ——</span>
-        <span class="card-name">PAGEFORGE</span>
-        <span class="card-tag">Page Builder</span>
-        <p class="card-desc">Build and export raw HTML pages. No bloat. No framework. Forge something from scratch.</p>
-        <span class="card-arrow">LAUNCH</span>
+      <a class="card" href="https://grungepunk.github.io/pageforge" data-index="05" style="--card-accent:#3cffd8;">
+        <span class="card-tag">BUILD // WEB</span>
+        <div class="card-title">PAGEFORGE</div>
+        <p class="card-desc">Build and export static pages fast. Forge something from scratch, ship it ugly, ship it fast.</p>
+        <div class="card-arrow">OPEN →</div>
       </a>
 
-      <a class="card card-vibe" href="https://grungepunk.github.io/vibe">
-        <span class="card-index">06 ——</span>
-        <span class="card-name">VIBE</span>
-        <span class="card-tag">Mood</span>
-        <p class="card-desc">Set the atmosphere. Curate a mood, build a feeling. Pure aesthetic on demand.</p>
-        <span class="card-arrow">LAUNCH</span>
+      <a class="card" href="https://grungepunk.github.io/vibe" data-index="06" style="--card-accent:#ff6ff2;">
+        <span class="card-tag">PLAYLIST MAKER</span>
+        <div class="card-title">VIBE</div>
+        <p class="card-desc">Build and share playlists with a mood. Curate your sound, set the scene. Music as aesthetic.</p>
+        <div class="card-arrow">OPEN →</div>
       </a>
 
     </div>
 
     <footer>
-      <span>// GRUNGEPUNK · GITHUB.IO</span>
-      <span>BUILT DIFFERENT &nbsp;·&nbsp; RAW HTML &nbsp;·&nbsp; NO FRAMEWORK</span>
+      <div class="footer-logo">GRUNGE<span>//</span>PUNK</div>
+      <div class="footer-note">BUILT BY SHĪRU &nbsp;// &nbsp;GITHUB.IO</div>
     </footer>
 
   </div>
