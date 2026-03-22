@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PAGEFORGE — build ur site</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0c0b; --surface: #151413; --surface2: #1e1c1a;
+    --border: #2a2725; --accent: #c8a97e; --accent2: #7e9cc8;
+    --danger: #c87e7e; --text: #e8e0d5; --muted: #6b6560;
+  }
+  body { font-family: 'Space Mono', monospace; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  header { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; height: 50px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; gap: 8px; }
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 3px; color: var(--accent); white-space: nowrap; }
+  .logo span { color: var(--muted); font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 1px; vertical-align: middle; margin-left: 6px; }
+  .header-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+  .btn { font-family: 'Space Mono', monospace; font-size: 10px; padding: 6px 12px; border: 1px solid var(--border); background: transparent; color: var(--text); cursor: pointer; letter-spacing: 1px; transition: all .15s; white-space: nowrap; }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 700; }
+  .btn.primary:hover { background: #dbbf8e; }
+  .btn.danger { border-color: var(--danger); color: var(--danger); }
+  .btn.danger:hover { background: var(--danger); color: var(--bg); }
+  .btn.sm { font-size: 9px; padding: 3px 7px; }
+
+  .workspace { display: grid; grid-template-columns: 210px 1fr 270px; flex: 1; overflow: hidden; }
+
+  .blocks-panel { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; padding: 14px 10px; }
+  .panel-label { font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; padding-bottom: 7px; border-bottom: 1px solid var(--border); }
+  .block-btn { width: 100%; text-align: left; background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: 'Space Mono', monospace; font-size: 10px; padding: 9px 10px; margin-bottom: 5px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all .15s; letter-spacing: .5px; }
+  .block-btn:hover { border-color: var(--accent); color: var(--accent); background: #1a1815; }
+  .block-btn .icon { font-size: 13px; width: 16px; text-align: center; }
+
+  .canvas-wrap { display: flex; flex-direction: column; background: #0a0908; overflow: hidden; }
+  .canvas-toolbar { padding: 7px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; background: var(--surface); flex-shrink: 0; }
+  .canvas-toolbar span { font-size: 9px; color: var(--muted); letter-spacing: 1px; }
+  .preview-toggle { display: flex; gap: 3px; margin-left: auto; }
+  .pt-btn { font-family: 'Space Mono', monospace; font-size: 9px; padding: 4px 10px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; letter-spacing: 1px; transition: all .15s; }
+  .pt-btn.active { border-color: var(--accent2); color: var(--accent2); }
+  .canvas-scroll { flex: 1; overflow-y: auto; padding: 20px; display: flex; justify-content: center; align-items: flex-start; }
+  .site-frame { width: 100%; min-height: 500px; background: #f5f0ea; border: 1px solid var(--border); position: relative; font-family: sans-serif; transition: background .2s; }
+  .site-frame.preview-mode .block-wrapper:hover { outline: none; }
+  .site-frame.preview-mode .block-controls { display: none !important; }
+  .empty-state { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #aaa; pointer-events: none; }
+  .empty-state .big { font-size: 28px; }
+  .empty-state p { font-size: 11px; font-family: 'Space Mono', monospace; }
+
+  .block-wrapper { position: relative; cursor: pointer; }
+  .block-wrapper:hover { outline: 2px solid var(--accent2); outline-offset: -2px; }
+  .block-wrapper.selected { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .block-controls { position: absolute; top: 4px; right: 4px; display: none; gap: 3px; z-index: 10; }
+  .block-wrapper:hover .block-controls, .block-wrapper.selected .block-controls { display: flex; }
+  .bc-btn { font-size: 9px; padding: 3px 5px; background: var(--bg); color: var(--text); border: 1px solid var(--border); cursor: pointer; font-family: 'Space Mono', monospace; line-height: 1; }
+  .bc-btn:hover { background: var(--surface2); }
+  .bc-btn.del { color: var(--danger); border-color: var(--danger); }
+
+  .inspector { background: var(--surface); border-left: 1px solid var(--border); overflow-y: auto; padding: 14px 12px; }
+  .inspector-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; gap: 8px; color: var(--muted); font-size: 10px; text-align: center; letter-spacing: 1px; }
+  .inspector-section { margin-bottom: 18px; }
+  .sec-label { font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
+  .field { margin-bottom: 8px; }
+  .field label { display: block; font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-bottom: 3px; text-transform: uppercase; }
+  .field input, .field textarea, .field select { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: 'Space Mono', monospace; font-size: 10px; padding: 6px 8px; outline: none; resize: vertical; transition: border-color .15s; }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent); }
+  .field textarea { min-height: 60px; }
+  .field select option { background: var(--surface2); }
+  .field input[type=file] { font-size: 9px; color: var(--text); padding: 4px; }
+
+  .color-row { display: flex; gap: 5px; align-items: center; }
+  .color-row input[type=color] { width: 30px; height: 28px; padding: 2px; border: 1px solid var(--border); background: var(--surface2); cursor: pointer; flex-shrink: 0; }
+  .color-row input[type=text] { flex: 1; }
+
+  .sub-block { border: 1px solid var(--border); padding: 8px; margin-bottom: 7px; background: var(--surface2); }
+  .sub-block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 9px; color: var(--muted); letter-spacing: 1px; }
+
+  .tab-bar { display: flex; gap: 2px; margin-bottom: 12px; }
+  .tab { font-family: 'Space Mono', monospace; font-size: 9px; padding: 5px 10px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; letter-spacing: 1px; transition: all .15s; }
+  .tab.active { background: var(--surface2); color: var(--text); border-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .swatch-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
+  .swatch { width: 20px; height: 20px; border: 2px solid transparent; cursor: pointer; transition: all .1s; }
+  .swatch:hover { transform: scale(1.2); border-color: var(--text); }
+
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .range-row { display: flex; gap: 8px; align-items: center; }
+  .range-row input[type=range] { flex: 1; }
+  .range-val { font-size: 9px; color: var(--muted); white-space: nowrap; min-width: 30px; text-align: right; }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.8); display: none; align-items: center; justify-content: center; z-index: 100; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); padding: 22px; width: 380px; max-width: 92vw; max-height: 85vh; overflow-y: auto; }
+  .modal h3 { font-family: 'Bebas Neue'; font-size: 18px; letter-spacing: 2px; color: var(--accent); margin-bottom: 14px; }
+  .modal-footer { margin-top: 14px; display: flex; gap: 6px; justify-content: flex-end; }
+
+  .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%) translateY(60px); background: var(--accent); color: var(--bg); font-family: 'Space Mono', monospace; font-size: 10px; padding: 9px 18px; letter-spacing: 1px; transition: transform .25s; z-index: 200; pointer-events: none; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">PAGEFORGE <span>// v2</span></div>
+  <div class="header-actions">
+    <button class="btn" onclick="setMode('preview')">PREVIEW</button>
+    <button class="btn" onclick="openSettings()">⚙ SETTINGS</button>
+    <button class="btn primary" onclick="exportSite()">↓ EXPORT</button>
+  </div>
+</header>
+
+<div class="workspace">
+  <div class="blocks-panel">
+    <div class="panel-label">ADD BLOCK</div>
+    <button class="block-btn" onclick="addBlock('heading')"><span class="icon">T</span> HEADING</button>
+    <button class="block-btn" onclick="addBlock('text')"><span class="icon">¶</span> TEXT</button>
+    <button class="block-btn" onclick="addBlock('link')"><span class="icon">⬡</span> LINK BUTTONS</button>
+    <button class="block-btn" onclick="addBlock('socials')"><span class="icon">◎</span> SOCIAL ICONS</button>
+    <button class="block-btn" onclick="addBlock('image')"><span class="icon">▣</span> IMAGE</button>
+    <button class="block-btn" onclick="addBlock('divider')"><span class="icon">—</span> DIVIDER</button>
+    <button class="block-btn" onclick="addBlock('custom')"><span class="icon">&lt;/&gt;</span> CUSTOM HTML</button>
+    <div class="panel-label" style="margin-top:20px;">PAGE</div>
+    <button class="block-btn" onclick="openSettings()"><span class="icon">⚙</span> SETTINGS</button>
+    <button class="block-btn" onclick="clearAll()" style="border-color:var(--danger);color:var(--danger);"><span class="icon">✕</span> CLEAR ALL</button>
+  </div>
+
+  <div class="canvas-wrap">
+    <div class="canvas-toolbar">
+      <span>CANVAS</span>
+      <div class="preview-toggle">
+        <button class="pt-btn active" id="edit-tab" onclick="setMode('edit')">EDIT</button>
+        <button class="pt-btn" id="prev-tab" onclick="setMode('preview')">PREVIEW</button>
+      </div>
+    </div>
+    <div class="canvas-scroll">
+      <div class="site-frame" id="site-frame">
+        <div class="empty-state" id="empty-state">
+          <div class="big">⬡</div>
+          <p>add a block from the left panel</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="inspector" id="inspector">
+    <div class="panel-label">INSPECTOR</div>
+    <div class="inspector-empty" id="inspector-empty">
+      <div style="font-size:20px;">◎</div>
+      <div>select a block<br>to edit it</div>
+    </div>
+    <div id="inspector-content" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <h3>PAGE SETTINGS</h3>
+    <div class="tab-bar">
+      <button class="tab active" onclick="switchSettingsTab('general',this)">GENERAL</button>
+      <button class="tab" onclick="switchSettingsTab('colors',this)">COLORS</button>
+      <button class="tab" onclick="switchSettingsTab('type',this)">TYPE</button>
+    </div>
+    <div id="st-general" class="tab-panel active">
+      <div class="field"><label>Page Title</label><input type="text" id="s-title" placeholder="My Site" oninput="applySettings()"></div>
+      <div class="field"><label>Favicon Emoji</label><input type="text" id="s-favicon" placeholder="🎷" maxlength="2" oninput="applySettings()"></div>
+      <div class="field"><label>Max Width (px)</label><input type="number" id="s-maxw" value="540" min="300" max="1200" oninput="applySettings()"></div>
+      <div class="field"><label>Page Padding Top/Bottom (px)</label><input type="number" id="s-vpad" value="40" min="0" max="200" oninput="applySettings()"></div>
+    </div>
+    <div id="st-colors" class="tab-panel">
+      <div class="field"><label>Background Color</label>
+        <div class="color-row"><input type="color" id="s-bg" value="#f5f0ea" oninput="syncColorFrom('s-bg','s-bg-hex','bg')"><input type="text" id="s-bg-hex" value="#f5f0ea" oninput="syncColorFrom('s-bg-hex','s-bg','bg')"></div>
+        <div class="swatch-row">
+          <div class="swatch" style="background:#f5f0ea" onclick="setCol('bg','#f5f0ea')"></div>
+          <div class="swatch" style="background:#ffffff" onclick="setCol('bg','#ffffff')"></div>
+          <div class="swatch" style="background:#0d0c0b" onclick="setCol('bg','#0d0c0b')"></div>
+          <div class="swatch" style="background:#1a1a2e" onclick="setCol('bg','#1a1a2e')"></div>
+          <div class="swatch" style="background:#0f1117" onclick="setCol('bg','#0f1117')"></div>
+          <div class="swatch" style="background:#1c0a0a" onclick="setCol('bg','#1c0a0a')"></div>
+          <div class="swatch" style="background:#0d1b0d" onclick="setCol('bg','#0d1b0d')"></div>
+          <div class="swatch" style="background:#e8e0ff" onclick="setCol('bg','#e8e0ff')"></div>
+          <div class="swatch" style="background:#fff0f3" onclick="setCol('bg','#fff0f3')"></div>
+          <div class="swatch" style="background:#fdf6e3" onclick="setCol('bg','#fdf6e3')"></div>
+        </div>
+      </div>
+      <div class="field"><label>Accent Color</label>
+        <div class="color-row"><input type="color" id="s-accent" value="#111111" oninput="syncColorFrom('s-accent','s-accent-hex','accent')"><input type="text" id="s-accent-hex" value="#111111" oninput="syncColorFrom('s-accent-hex','s-accent','accent')"></div>
+        <div class="swatch-row">
+          <div class="swatch" style="background:#111111" onclick="setCol('accent','#111111')"></div>
+          <div class="swatch" style="background:#c8a97e" onclick="setCol('accent','#c8a97e')"></div>
+          <div class="swatch" style="background:#7e9cc8" onclick="setCol('accent','#7e9cc8')"></div>
+          <div class="swatch" style="background:#c87e7e" onclick="setCol('accent','#c87e7e')"></div>
+          <div class="swatch" style="background:#7ec8a9" onclick="setCol('accent','#7ec8a9')"></div>
+          <div class="swatch" style="background:#a97ec8" onclick="setCol('accent','#a97ec8')"></div>
+          <div class="swatch" style="background:#e8a838" onclick="setCol('accent','#e8a838')"></div>
+          <div class="swatch" style="background:#ff6b6b" onclick="setCol('accent','#ff6b6b')"></div>
+        </div>
+      </div>
+      <div class="field"><label>Default Text Color</label>
+        <div class="color-row"><input type="color" id="s-textcol" value="#111111" oninput="syncColorFrom('s-textcol','s-textcol-hex','textCol')"><input type="text" id="s-textcol-hex" value="#111111" oninput="syncColorFrom('s-textcol-hex','s-textcol','textCol')"></div>
+        <div class="swatch-row">
+          <div class="swatch" style="background:#111111" onclick="setCol('textCol','#111111')"></div>
+          <div class="swatch" style="background:#ffffff" onclick="setCol('textCol','#ffffff')"></div>
+          <div class="swatch" style="background:#e8e0d5" onclick="setCol('textCol','#e8e0d5')"></div>
+          <div class="swatch" style="background:#444444" onclick="setCol('textCol','#444444')"></div>
+        </div>
+      </div>
+    </div>
+    <div id="st-type" class="tab-panel">
+      <div class="field"><label>Font Family</label>
+        <select id="s-font" oninput="applySettings()">
+          <option value="'Georgia', serif">Georgia (classic serif)</option>
+          <option value="'Space Mono', monospace">Space Mono (mono)</option>
+          <option value="system-ui, sans-serif">System UI (clean)</option>
+          <option value="'Courier New', monospace">Courier New (typewriter)</option>
+          <option value="'Times New Roman', serif">Times New Roman</option>
+          <option value="'Arial', sans-serif">Arial</option>
+          <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+          <option value="'Palatino', serif">Palatino (elegant)</option>
+        </select>
+      </div>
+      <div class="field"><label>Base Font Size (px)</label>
+        <div class="range-row"><input type="range" id="s-fontsize" min="11" max="20" value="14" oninput="applySettings();document.getElementById('fsv').textContent=this.value+'px'"><span class="range-val" id="fsv">14px</span></div>
+      </div>
+      <div class="field"><label>Line Height</label>
+        <div class="range-row"><input type="range" id="s-lh" min="1.2" max="2.2" step="0.1" value="1.7" oninput="applySettings();document.getElementById('lhv').textContent=this.value"><span class="range-val" id="lhv">1.7</span></div>
+      </div>
+      <div class="field"><label>Letter Spacing (em)</label>
+        <div class="range-row"><input type="range" id="s-ls" min="-0.05" max="0.2" step="0.01" value="0" oninput="applySettings();document.getElementById('lsv').textContent=this.value+'em'"><span class="range-val" id="lsv">0em</span></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('settings-modal')">CLOSE</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let blocks = [], selectedId = null, blockId = 0, previewMode = false;
+
+const settings = {
+  title:'My Site', favicon:'🎷',
+  bg:'#f5f0ea', accent:'#111111', textCol:'#111111',
+  font:"'Georgia', serif", maxWidth:540, vPad:40,
+  fontSize:14, lineHeight:1.7, letterSpacing:0
+};
+
+function defaultBlock(type) {
+  const id = ++blockId, b = { id, type, style:{} };
+  switch(type) {
+    case 'heading': return {...b, level:'h1', text:'Your Name', sub:'a short tagline here', align:'left'};
+    case 'text': return {...b, text:'Write something here. This is a paragraph block.', align:'left'};
+    case 'link': return {...b, links:[{label:'My GitHub',url:'#',color:''},{label:'Portfolio',url:'#',color:''}], btnStyle:'outline', radius:0};
+    case 'socials': return {...b, items:[{icon:'tw',label:'X/Twitter',url:'#'},{icon:'gh',label:'GitHub',url:'#'},{icon:'ig',label:'Instagram',url:'#'}], size:42, radius:0};
+    case 'image': return {...b, src:'', alt:'', align:'center', width:100, radius:0, caption:''};
+    case 'divider': return {...b, color:'#cccccc', thickness:1, style_:'solid', margin:8};
+    case 'custom': return {...b, html:'<p style="padding:16px;color:#555;font-size:13px;">Custom HTML here</p>'};
+  }
+}
+
+const socialIcons = {tw:'𝕏',gh:'GH',ig:'IG',yt:'YT',li:'IN',tt:'TK',dc:'DC',sp:'♫',em:'✉',be:'Bē',fb:'FB'};
+function sIcon(t) { return socialIcons[t] || t.slice(0,2).toUpperCase(); }
+
+function renderBlockHTML(b) {
+  const tc = b.style.color || settings.textCol;
+  const ac = b.style.accentOverride || settings.accent;
+  const pv = n => b.style.padV !== undefined ? b.style.padV : n;
+  const ph = n => b.style.padH !== undefined ? b.style.padH : n;
+
+  switch(b.type) {
+    case 'heading': {
+      const sz = {h1:'2.4em',h2:'1.6em',h3:'1.2em'}[b.level];
+      return `<div style="padding:${pv(28)}px ${ph(32)}px ${Math.round(pv(28)*.5)}px;text-align:${b.align||'left'}">
+        <${b.level} style="font-size:${sz};font-weight:700;color:${tc};line-height:1.1;">${b.text}</${b.level}>
+        ${b.sub?`<p style="font-size:.85em;opacity:.6;margin-top:5px;color:${tc}">${b.sub}</p>`:''}
+      </div>`;
+    }
+    case 'text':
+      return `<div style="padding:${pv(10)}px ${ph(32)}px;text-align:${b.align||'left'}"><p style="color:${tc};opacity:.85;">${b.text.replace(/\n/g,'<br>')}</p></div>`;
+    case 'link': {
+      const r = b.radius||0;
+      const sf = {
+        outline: c => `display:block;padding:11px 20px;border:1.5px solid ${c};text-align:center;text-decoration:none;font-size:.9em;font-weight:600;color:${c};border-radius:${r}px;transition:all .15s;margin-bottom:6px;`,
+        filled: c => `display:block;padding:11px 20px;background:${c};text-align:center;text-decoration:none;font-size:.9em;font-weight:600;color:#fff;border-radius:${r}px;transition:all .15s;margin-bottom:6px;`,
+        ghost: c => `display:block;padding:11px 20px;border-bottom:1.5px solid ${c};text-align:center;text-decoration:none;font-size:.9em;font-weight:600;color:${c};margin-bottom:6px;`,
+      }[b.btnStyle]||((c)=>`display:block;padding:11px 20px;border:1.5px solid ${c};text-align:center;text-decoration:none;font-size:.9em;font-weight:600;color:${c};border-radius:${r}px;margin-bottom:6px;`);
+      return `<div style="padding:${pv(14)}px ${ph(32)}px;">${b.links.map(l=>`<a href="${l.url}" style="${sf(l.color||ac)}" onclick="return false">${l.label}</a>`).join('')}</div>`;
+    }
+    case 'socials': {
+      const sz = b.size||42;
+      return `<div style="padding:${pv(14)}px ${ph(32)}px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+        ${b.items.map(s=>`<a href="${s.url}" title="${s.label}" onclick="return false" style="width:${sz}px;height:${sz}px;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid ${ac};color:${ac};text-decoration:none;font-size:${Math.round(sz*.42)}px;border-radius:${b.radius||0}px;">${sIcon(s.icon)}</a>`).join('')}
+      </div>`;
+    }
+    case 'image': {
+      if(!b.src) return `<div style="padding:${pv(20)}px ${ph(32)}px;display:flex;justify-content:center;"><div style="width:120px;height:80px;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:11px;color:#999;font-family:monospace;">upload image →</div></div>`;
+      return `<div style="padding:${pv(8)}px ${ph(0)}px;display:flex;justify-content:${b.align==='center'?'center':b.align==='right'?'flex-end':'flex-start'};">
+        <div style="width:${b.width||100}%;max-width:100%;">
+          <img src="${b.src}" alt="${b.alt||''}" style="width:100%;height:auto;display:block;border-radius:${b.radius||0}px;">
+          ${b.caption?`<p style="text-align:center;font-size:.75em;color:${tc};opacity:.6;margin-top:5px;">${b.caption}</p>`:''}
+        </div>
+      </div>`;
+    }
+    case 'divider':
+      return `<div style="padding:${b.margin||8}px 32px;"><hr style="border:none;border-top:${b.thickness||1}px ${b.style_||'solid'} ${b.color||'#ccc'};"></div>`;
+    case 'custom':
+      return `<div>${b.html}</div>`;
+  }
+  return '';
+}
+
+function renderCanvas() {
+  const frame = document.getElementById('site-frame');
+  document.getElementById('empty-state').style.display = blocks.length ? 'none' : 'flex';
+  frame.querySelectorAll('.block-wrapper').forEach(e=>e.remove());
+  frame.style.fontFamily = settings.font;
+  frame.style.background = settings.bg;
+  frame.style.maxWidth = settings.maxWidth + 'px';
+  frame.style.color = settings.textCol;
+  frame.style.fontSize = settings.fontSize + 'px';
+  frame.style.lineHeight = settings.lineHeight;
+  frame.style.letterSpacing = settings.letterSpacing + 'em';
+
+  blocks.forEach(block => {
+    const wrap = document.createElement('div');
+    wrap.className = 'block-wrapper' + (block.id===selectedId?' selected':'');
+    wrap.dataset.id = block.id;
+    const ctrl = document.createElement('div');
+    ctrl.className = 'block-controls';
+    ctrl.innerHTML = `<button class="bc-btn" onclick="moveBlock(${block.id},-1)">↑</button><button class="bc-btn" onclick="moveBlock(${block.id},1)">↓</button><button class="bc-btn del" onclick="deleteBlock(${block.id})">✕</button>`;
+    wrap.innerHTML = renderBlockHTML(block);
+    wrap.appendChild(ctrl);
+    if(block.style.bg) wrap.style.background = block.style.bg;
+    wrap.addEventListener('click', e=>{ if(e.target.closest('.bc-btn')) return; selectBlock(block.id); });
+    frame.appendChild(wrap);
+  });
+}
+
+function addBlock(type) { const b=defaultBlock(type); blocks.push(b); selectBlock(b.id); renderCanvas(); renderInspector(); toast('Block added'); }
+function deleteBlock(id) { blocks=blocks.filter(b=>b.id!==id); if(selectedId===id) selectedId=null; renderCanvas(); renderInspector(); }
+function moveBlock(id,dir) { const i=blocks.findIndex(b=>b.id===id),ni=i+dir; if(ni<0||ni>=blocks.length) return; [blocks[i],blocks[ni]]=[blocks[ni],blocks[i]]; renderCanvas(); }
+function clearAll() { if(!confirm('Clear all blocks?')) return; blocks=[]; selectedId=null; renderCanvas(); renderInspector(); }
+function selectBlock(id) { selectedId=id; renderCanvas(); renderInspector(); }
+
+function renderInspector() {
+  const empty=document.getElementById('inspector-empty'), content=document.getElementById('inspector-content');
+  const block=blocks.find(b=>b.id===selectedId);
+  if(!block){ empty.style.display='flex'; content.style.display='none'; content.innerHTML=''; return; }
+  empty.style.display='none'; content.style.display='block';
+  content.innerHTML = buildInspector(block);
+}
+
+function buildInspector(b) {
+  let h = `<div class="tab-bar">
+    <button class="tab active" onclick="switchTab('ct',this,${b.id})">CONTENT</button>
+    <button class="tab" onclick="switchTab('st',this,${b.id})">STYLE</button>
+  </div>
+  <div id="tab-ct-${b.id}" class="tab-panel active">`;
+
+  const sTypes = ['tw','gh','ig','yt','li','tt','dc','sp','em','be','fb'];
+  const sNames = {tw:'X/Twitter',gh:'GitHub',ig:'Instagram',yt:'YouTube',li:'LinkedIn',tt:'TikTok',dc:'Discord',sp:'Spotify',em:'Email',be:'Behance',fb:'Facebook'};
+
+  if(b.type==='heading') {
+    h+=`<div class="field"><label>Level</label><select onchange="upd(${b.id},'level',this.value)">${['h1','h2','h3'].map(v=>`<option value="${v}"${b.level===v?' selected':''}>${v.toUpperCase()}</option>`).join('')}</select></div>
+    <div class="field"><label>Heading</label><input type="text" value="${esc(b.text)}" oninput="upd(${b.id},'text',this.value)"></div>
+    <div class="field"><label>Subtext</label><input type="text" value="${esc(b.sub)}" oninput="upd(${b.id},'sub',this.value)" placeholder="optional"></div>
+    <div class="field"><label>Align</label><select onchange="upd(${b.id},'align',this.value)">${['left','center','right'].map(v=>`<option value="${v}"${b.align===v?' selected':''}>${v}</option>`).join('')}</select></div>`;
+  } else if(b.type==='text') {
+    h+=`<div class="field"><label>Text</label><textarea oninput="upd(${b.id},'text',this.value)" style="min-height:90px">${esc(b.text)}</textarea></div>
+    <div class="field"><label>Align</label><select onchange="upd(${b.id},'align',this.value)">${['left','center','right'].map(v=>`<option value="${v}"${b.align===v?' selected':''}>${v}</option>`).join('')}</select></div>`;
+  } else if(b.type==='link') {
+    h+=`<div class="field"><label>Button Style</label><select onchange="upd(${b.id},'btnStyle',this.value)">${['outline','filled','ghost'].map(v=>`<option value="${v}"${b.btnStyle===v?' selected':''}>${v}</option>`).join('')}</select></div>
+    <div class="field"><label>Corner Radius</label><div class="range-row"><input type="range" min="0" max="40" value="${b.radius||0}" oninput="upd(${b.id},'radius',+this.value);document.getElementById('rr${b.id}').textContent=this.value+'px'"><span class="range-val" id="rr${b.id}">${b.radius||0}px</span></div></div>
+    <div class="sec-label" style="margin-top:10px;">LINKS</div>
+    ${b.links.map((l,i)=>`<div class="sub-block">
+      <div class="sub-block-header"><span>LINK ${i+1}</span><button class="btn sm danger" onclick="rmLink(${b.id},${i})">✕</button></div>
+      <div class="field"><label>Label</label><input type="text" value="${esc(l.label)}" oninput="updLink(${b.id},${i},'label',this.value)"></div>
+      <div class="field"><label>URL</label><input type="text" value="${esc(l.url)}" oninput="updLink(${b.id},${i},'url',this.value)" placeholder="https://..."></div>
+      <div class="field"><label>Button Color</label><div class="color-row"><input type="color" value="${l.color||settings.accent}" oninput="updLink(${b.id},${i},'color',this.value)"><input type="text" value="${esc(l.color||settings.accent)}" oninput="updLink(${b.id},${i},'color',this.value)"></div></div>
+    </div>`).join('')}
+    <button class="btn" style="width:100%;font-size:9px;" onclick="addLink(${b.id})">+ ADD LINK</button>`;
+  } else if(b.type==='socials') {
+    h+=`<div class="field"><label>Icon Size</label><div class="range-row"><input type="range" min="28" max="72" value="${b.size||42}" oninput="upd(${b.id},'size',+this.value);document.getElementById('sz${b.id}').textContent=this.value+'px'"><span class="range-val" id="sz${b.id}">${b.size||42}px</span></div></div>
+    <div class="field"><label>Corner Radius</label><div class="range-row"><input type="range" min="0" max="50" value="${b.radius||0}" oninput="upd(${b.id},'radius',+this.value);document.getElementById('sr${b.id}').textContent=this.value+'px'"><span class="range-val" id="sr${b.id}">${b.radius||0}px</span></div></div>
+    <div class="sec-label" style="margin-top:10px;">ICONS</div>
+    ${b.items.map((s,i)=>`<div class="sub-block">
+      <div class="sub-block-header"><span>${sNames[s.icon]||s.icon}</span><button class="btn sm danger" onclick="rmSocial(${b.id},${i})">✕</button></div>
+      <div class="field"><label>Platform</label><select oninput="updSocial(${b.id},${i},'icon',this.value)">${sTypes.map(t=>`<option value="${t}"${s.icon===t?' selected':''}>${sNames[t]}</option>`).join('')}</select></div>
+      <div class="field"><label>URL</label><input type="text" value="${esc(s.url)}" oninput="updSocial(${b.id},${i},'url',this.value)" placeholder="https://..."></div>
+    </div>`).join('')}
+    <button class="btn" style="width:100%;font-size:9px;" onclick="addSocial(${b.id})">+ ADD ICON</button>`;
+  } else if(b.type==='image') {
+    h+=`<div class="field"><label>Upload Image</label><input type="file" accept="image/*" onchange="handleImg(${b.id},this)"></div>
+    ${b.src?`<div style="margin:6px 0;"><img src="${b.src}" style="max-width:100%;max-height:70px;border:1px solid var(--border);"></div>`:''}
+    <div class="field"><label>Alt Text</label><input type="text" value="${esc(b.alt)}" oninput="upd(${b.id},'alt',this.value)"></div>
+    <div class="field"><label>Caption</label><input type="text" value="${esc(b.caption)}" oninput="upd(${b.id},'caption',this.value)" placeholder="optional"></div>
+    <div class="field"><label>Width %</label><div class="range-row"><input type="range" min="10" max="100" value="${b.width||100}" oninput="upd(${b.id},'width',+this.value);document.getElementById('iw${b.id}').textContent=this.value+'%'"><span class="range-val" id="iw${b.id}">${b.width||100}%</span></div></div>
+    <div class="field"><label>Corner Radius</label><div class="range-row"><input type="range" min="0" max="50" value="${b.radius||0}" oninput="upd(${b.id},'radius',+this.value);document.getElementById('ir${b.id}').textContent=this.value+'px'"><span class="range-val" id="ir${b.id}">${b.radius||0}px</span></div></div>
+    <div class="field"><label>Align</label><select onchange="upd(${b.id},'align',this.value)">${['left','center','right'].map(v=>`<option value="${v}"${b.align===v?' selected':''}>${v}</option>`).join('')}</select></div>`;
+  } else if(b.type==='divider') {
+    h+=`<div class="field"><label>Color</label><div class="color-row"><input type="color" value="${b.color||'#cccccc'}" oninput="upd(${b.id},'color',this.value)"><input type="text" value="${esc(b.color||'#cccccc')}" oninput="upd(${b.id},'color',this.value)"></div></div>
+    <div class="field"><label>Style</label><select onchange="upd(${b.id},'style_',this.value)">${['solid','dashed','dotted','double'].map(v=>`<option value="${v}"${b.style_===v?' selected':''}>${v}</option>`).join('')}</select></div>
+    <div class="field"><label>Thickness</label><div class="range-row"><input type="range" min="1" max="8" value="${b.thickness||1}" oninput="upd(${b.id},'thickness',+this.value);document.getElementById('dt${b.id}').textContent=this.value+'px'"><span class="range-val" id="dt${b.id}">${b.thickness||1}px</span></div></div>
+    <div class="field"><label>Margin</label><div class="range-row"><input type="range" min="0" max="60" value="${b.margin||8}" oninput="upd(${b.id},'margin',+this.value);document.getElementById('dm${b.id}').textContent=this.value+'px'"><span class="range-val" id="dm${b.id}">${b.margin||8}px</span></div></div>`;
+  } else if(b.type==='custom') {
+    h+=`<div class="field"><label>HTML</label><textarea style="min-height:120px;font-size:9px;" oninput="upd(${b.id},'html',this.value)">${esc(b.html)}</textarea></div>`;
+  }
+
+  h += `</div>
+  <div id="tab-st-${b.id}" class="tab-panel">
+    <div class="field"><label>Block Background</label>
+      <div class="color-row"><input type="color" value="${b.style.bg||settings.bg}" oninput="updSt(${b.id},'bg',this.value)"><input type="text" value="${esc(b.style.bg||'')}" placeholder="none" oninput="updSt(${b.id},'bg',this.value)"><button class="btn sm" onclick="clearSt(${b.id},'bg')">✕</button></div>
+    </div>
+    <div class="field"><label>Text Color</label>
+      <div class="color-row"><input type="color" value="${b.style.color||settings.textCol}" oninput="updSt(${b.id},'color',this.value)"><input type="text" value="${esc(b.style.color||'')}" placeholder="inherit" oninput="updSt(${b.id},'color',this.value)"><button class="btn sm" onclick="clearSt(${b.id},'color')">✕</button></div>
+    </div>
+    ${(b.type==='link'||b.type==='socials')?`<div class="field"><label>Accent Override</label>
+      <div class="color-row"><input type="color" value="${b.style.accentOverride||settings.accent}" oninput="updSt(${b.id},'accentOverride',this.value)"><input type="text" value="${esc(b.style.accentOverride||'')}" placeholder="use page accent" oninput="updSt(${b.id},'accentOverride',this.value)"><button class="btn sm" onclick="clearSt(${b.id},'accentOverride')">✕</button></div>
+    </div>`:''}
+    <div class="field"><label>Vertical Padding</label><div class="range-row"><input type="range" min="0" max="80" value="${b.style.padV!==undefined?b.style.padV:16}" oninput="updSt(${b.id},'padV',+this.value);document.getElementById('pv${b.id}').textContent=this.value+'px'"><span class="range-val" id="pv${b.id}">${b.style.padV!==undefined?b.style.padV:16}px</span></div></div>
+    <div class="field"><label>Horizontal Padding</label><div class="range-row"><input type="range" min="0" max="80" value="${b.style.padH!==undefined?b.style.padH:32}" oninput="updSt(${b.id},'padH',+this.value);document.getElementById('ph${b.id}').textContent=this.value+'px'"><span class="range-val" id="ph${b.id}">${b.style.padH!==undefined?b.style.padH:32}px</span></div></div>
+  </div>
+  <div style="margin-top:14px;"><button class="btn danger" style="width:100%;font-size:9px;" onclick="deleteBlock(${b.id})">DELETE BLOCK</button></div>`;
+
+  return h;
+}
+
+function esc(s='') { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function upd(id,k,v) { const b=blocks.find(b=>b.id===id); if(!b) return; b[k]=v; renderCanvas(); }
+function updSt(id,k,v) { const b=blocks.find(b=>b.id===id); if(!b) return; if(!v) delete b.style[k]; else b.style[k]=v; renderCanvas(); }
+function clearSt(id,k) { const b=blocks.find(b=>b.id===id); if(!b) return; delete b.style[k]; renderCanvas(); renderInspector(); }
+function updLink(id,i,k,v) { const b=blocks.find(b=>b.id===id); b.links[i][k]=v; renderCanvas(); }
+function addLink(id) { const b=blocks.find(b=>b.id===id); b.links.push({label:'New Link',url:'#',color:''}); renderCanvas(); renderInspector(); }
+function rmLink(id,i) { const b=blocks.find(b=>b.id===id); b.links.splice(i,1); renderCanvas(); renderInspector(); }
+function updSocial(id,i,k,v) { const b=blocks.find(b=>b.id===id); b.items[i][k]=v; renderCanvas(); }
+function addSocial(id) { const b=blocks.find(b=>b.id===id); b.items.push({icon:'gh',label:'GitHub',url:'#'}); renderCanvas(); renderInspector(); }
+function rmSocial(id,i) { const b=blocks.find(b=>b.id===id); b.items.splice(i,1); renderCanvas(); renderInspector(); }
+function handleImg(id,input) { const f=input.files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>{upd(id,'src',e.target.result);renderInspector();toast('Image loaded!');}; r.readAsDataURL(f); }
+
+function switchTab(name, btn, bid) {
+  const parent = btn.closest('#inspector-content');
+  parent.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  parent.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(`tab-${name}-${bid}`)?.classList.add('active');
+}
+
+function switchSettingsTab(name, btn) {
+  document.querySelectorAll('#settings-modal .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#settings-modal .tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('st-'+name)?.classList.add('active');
+}
+
+function openSettings() {
+  document.getElementById('s-title').value=settings.title;
+  document.getElementById('s-favicon').value=settings.favicon;
+  document.getElementById('s-bg').value=settings.bg;
+  document.getElementById('s-bg-hex').value=settings.bg;
+  document.getElementById('s-accent').value=settings.accent;
+  document.getElementById('s-accent-hex').value=settings.accent;
+  document.getElementById('s-textcol').value=settings.textCol;
+  document.getElementById('s-textcol-hex').value=settings.textCol;
+  document.getElementById('s-font').value=settings.font;
+  document.getElementById('s-maxw').value=settings.maxWidth;
+  document.getElementById('s-vpad').value=settings.vPad;
+  document.getElementById('s-fontsize').value=settings.fontSize;
+  document.getElementById('s-lh').value=settings.lineHeight;
+  document.getElementById('s-ls').value=settings.letterSpacing;
+  document.getElementById('settings-modal').classList.add('open');
+}
+
+function applySettings() {
+  settings.title=document.getElementById('s-title').value||'My Site';
+  settings.favicon=document.getElementById('s-favicon').value||'🎷';
+  settings.font=document.getElementById('s-font').value;
+  settings.maxWidth=parseInt(document.getElementById('s-maxw').value)||540;
+  settings.vPad=parseInt(document.getElementById('s-vpad').value)||40;
+  settings.fontSize=parseInt(document.getElementById('s-fontsize').value)||14;
+  settings.lineHeight=parseFloat(document.getElementById('s-lh').value)||1.7;
+  settings.letterSpacing=parseFloat(document.getElementById('s-ls').value)||0;
+  renderCanvas();
+}
+
+function syncColorFrom(srcId, dstId, key) {
+  const val = document.getElementById(srcId).value;
+  if(srcId.endsWith('-hex') && !/^#[0-9a-fA-F]{6}$/.test(val)) return;
+  document.getElementById(dstId).value = val;
+  settings[key] = val;
+  renderCanvas();
+}
+
+function setCol(key, c) {
+  settings[key] = c;
+  const map = {bg:['s-bg','s-bg-hex'], accent:['s-accent','s-accent-hex'], textCol:['s-textcol','s-textcol-hex']};
+  map[key]?.forEach(id => { const el=document.getElementById(id); if(el) el.value=c; });
+  renderCanvas();
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{ if(e.target===el) el.classList.remove('open'); }));
+
+function setMode(mode) {
+  previewMode = mode==='preview';
+  document.getElementById('site-frame').classList.toggle('preview-mode',previewMode);
+  document.getElementById('edit-tab').classList.toggle('active',!previewMode);
+  document.getElementById('prev-tab').classList.toggle('active',previewMode);
+}
+
+function exportSite() {
+  const ac=settings.accent, tc=settings.textCol;
+
+  const bodyContent = blocks.map(b => {
+    const btc=b.style.color||tc, bac=b.style.accentOverride||ac;
+    const bg=b.style.bg?` style="background:${b.style.bg}"`:'';
+    const pv=n=>b.style.padV!==undefined?b.style.padV:n;
+    const ph=n=>b.style.padH!==undefined?b.style.padH:n;
+
+    switch(b.type) {
+      case 'heading': {
+        const sz={h1:'2.4em',h2:'1.6em',h3:'1.2em'}[b.level];
+        return `<div${bg} style="padding:${pv(28)}px ${ph(32)}px ${Math.round(pv(28)*.5)}px;text-align:${b.align||'left'}">
+  <${b.level} style="font-size:${sz};font-weight:700;color:${btc};line-height:1.1;">${b.text}</${b.level}>
+  ${b.sub?`<p style="font-size:.85em;opacity:.6;margin-top:5px;color:${btc}">${b.sub}</p>`:''}
+</div>`;
+      }
+      case 'text':
+        return `<div${bg} style="padding:${pv(10)}px ${ph(32)}px;text-align:${b.align||'left'}"><p style="color:${btc};opacity:.85;">${b.text.replace(/\n/g,'<br>')}</p></div>`;
+      case 'link': {
+        const r=b.radius||0;
+        const sf={
+          outline:c=>`display:block;padding:11px 20px;border:1.5px solid ${c};text-align:center;text-decoration:none;font-size:.9em;font-weight:600;color:${c};border-radius:${r}px;margin-bottom:6px;`,
+          filled:c=>`display:block;padding:11px 20px;background:${c};text-align:center;text-decoration:none;font-size:.9em;font-weight:600;color:#fff;border-radius:${r}px;margin-bottom:6px;`,
+          ghost:c=>`display:block;padding:11px 20px;border-bottom:1.5px solid ${c};text-align:center;text-decoration:none;font-size:.9em;font-weight:600;color:${c};margin-bottom:6px;`,
+        }[b.btnStyle]||(c=>`display:block;padding:11px 20px;border:1.5px solid ${c};text-align:center;text-decoration:none;font-size:.9em;font-weight:600;color:${c};border-radius:${r}px;margin-bottom:6px;`);
+        return `<div${bg} style="padding:${pv(14)}px ${ph(32)}px;">\n${b.links.map(l=>`  <a href="${l.url}" style="${sf(l.color||bac)}">${l.label}</a>`).join('\n')}\n</div>`;
+      }
+      case 'socials': {
+        const sz=b.size||42;
+        return `<div${bg} style="padding:${pv(14)}px ${ph(32)}px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">\n${b.items.map(s=>`  <a href="${s.url}" title="${s.label}" style="width:${sz}px;height:${sz}px;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid ${bac};color:${bac};text-decoration:none;font-size:${Math.round(sz*.42)}px;border-radius:${b.radius||0}px;">${sIcon(s.icon)}</a>`).join('\n')}\n</div>`;
+      }
+      case 'image':
+        if(!b.src) return '';
+        return `<div${bg} style="padding:${pv(8)}px ${ph(0)}px;display:flex;justify-content:${b.align==='center'?'center':b.align==='right'?'flex-end':'flex-start'};">
+  <div style="width:${b.width||100}%;max-width:100%;">
+    <img src="${b.src}" alt="${b.alt||''}" style="width:100%;height:auto;display:block;border-radius:${b.radius||0}px;">
+    ${b.caption?`<p style="text-align:center;font-size:.75em;color:${btc};opacity:.6;margin-top:5px;">${b.caption}</p>`:''}
+  </div>
+</div>`;
+      case 'divider':
+        return `<div${bg} style="padding:${b.margin||8}px 32px;"><hr style="border:none;border-top:${b.thickness||1}px ${b.style_||'solid'} ${b.color||'#ccc'};"></div>`;
+      case 'custom':
+        return `<div${bg}>${b.html}</div>`;
+    }
+    return '';
+  }).filter(Boolean).join('\n\n');
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${settings.title}</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>${settings.favicon}</text></svg>">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: ${settings.font}; background: ${settings.bg}; color: ${tc}; min-height: 100vh; display: flex; justify-content: center; padding: ${settings.vPad}px 20px; font-size: ${settings.fontSize}px; line-height: ${settings.lineHeight}; letter-spacing: ${settings.letterSpacing}em; }
+.site-wrap { width: 100%; max-width: ${settings.maxWidth}px; }
+</style>
+</head>
+<body>
+<div class="site-wrap">
+
+${bodyContent}
+
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html],{type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'index.html'; a.click();
+  toast('Exported! Drop index.html into your GitHub Pages repo 🔥');
+}
+
+function toast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+renderCanvas();
+</script>
+</body>
+</html>

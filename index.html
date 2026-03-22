@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GRUNGEPUNK // HUB</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Cutive+Mono&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0b0e;
+      --surface: #111018;
+      --border: #26222e;
+      --accent: #c8ff00;
+      --accent2: #ff3c6e;
+      --accent3: #9b6dff;
+      --text: #e8e0f0;
+      --muted: #5c5268;
+      --dim: #2e2938;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    /* grain */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.028;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* scanlines */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 3px,
+        rgba(0,0,0,0.07) 3px,
+        rgba(0,0,0,0.07) 4px
+      );
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    .wrapper {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 28px 100px;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      padding: 72px 0 56px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 64px;
+      position: relative;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .eyebrow {
+      font-family: 'Cutive Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.45em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .eyebrow::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(60px, 12vw, 124px);
+      line-height: 0.88;
+      letter-spacing: 0.02em;
+      color: var(--text);
+    }
+
+    h1 .slash { color: var(--accent); }
+
+    h1 .sub {
+      display: block;
+      font-size: clamp(26px, 4.5vw, 50px);
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    .header-desc {
+      margin-top: 28px;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      max-width: 440px;
+      line-height: 2;
+    }
+
+    .header-meta {
+      position: absolute;
+      top: 72px;
+      right: 0;
+      text-align: right;
+      font-family: 'Cutive Mono', monospace;
+      font-size: 10px;
+      color: var(--dim);
+      line-height: 2.2;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-right: 6px;
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.15; }
+    }
+
+    /* ─── GRID ─── */
+    .grid-label {
+      font-family: 'Cutive Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.4em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .grid-label::before { content: '//'; color: var(--accent); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2px;
+    }
+
+    /* ─── CARD ─── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 36px 32px 30px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, background 0.2s;
+      cursor: crosshair;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .card:nth-child(1) { animation-delay: 0.06s; }
+    .card:nth-child(2) { animation-delay: 0.12s; }
+    .card:nth-child(3) { animation-delay: 0.18s; }
+    .card:nth-child(4) { animation-delay: 0.24s; }
+    .card:nth-child(5) { animation-delay: 0.30s; }
+    .card:nth-child(6) { animation-delay: 0.36s; }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.3s;
+      background: radial-gradient(ellipse at top left, var(--card-glow, rgba(200,255,0,0.04)), transparent 65%);
+    }
+
+    .card:hover { border-color: var(--card-accent, var(--accent)); background: #14111b; }
+    .card:hover::before { opacity: 1; }
+
+    /* corner triangle */
+    .card::after {
+      content: '';
+      position: absolute;
+      top: -1px;
+      right: -1px;
+      width: 0; height: 0;
+      border-style: solid;
+      border-width: 0 16px 16px 0;
+      border-color: transparent var(--card-accent, var(--accent)) transparent transparent;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .card:hover::after { opacity: 1; }
+
+    .card-index {
+      font-family: 'Cutive Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+    }
+
+    .card-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 40px;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      color: var(--text);
+      transition: color 0.2s;
+    }
+
+    .card:hover .card-name { color: var(--card-accent, var(--accent)); }
+
+    .card-tag {
+      display: inline-block;
+      font-family: 'Cutive Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--card-accent, var(--accent));
+      border: 1px solid currentColor;
+      padding: 3px 8px;
+      width: fit-content;
+      opacity: 0.65;
+    }
+
+    .card-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.85;
+      letter-spacing: 0.03em;
+      margin-top: 4px;
+    }
+
+    .card-arrow {
+      margin-top: auto;
+      padding-top: 22px;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.25em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: color 0.2s, gap 0.25s;
+    }
+
+    .card:hover .card-arrow { color: var(--card-accent, var(--accent)); gap: 18px; }
+
+    .card-arrow::before {
+      content: '';
+      flex: 0 0 36px;
+      height: 1px;
+      background: currentColor;
+      transition: flex-basis 0.3s;
+    }
+
+    .card:hover .card-arrow::before { flex-basis: 56px; }
+
+    /* ─── ACCENT THEMES ─── */
+    .card-glyphrot  { --card-accent: #c8ff00; --card-glow: rgba(200,255,0,0.05); }
+    .card-persona   { --card-accent: #ff3c6e; --card-glow: rgba(255,60,110,0.05); }
+    .card-velvet    { --card-accent: #9b6dff; --card-glow: rgba(155,109,255,0.06); }
+    .card-notepad   { --card-accent: #00d4ff; --card-glow: rgba(0,212,255,0.05); }
+    .card-pageforge { --card-accent: #ff9500; --card-glow: rgba(255,149,0,0.05); }
+    .card-vibe      { --card-accent: #ff3c6e; --card-glow: rgba(255,60,110,0.05); }
+
+    /* ─── FOOTER ─── */
+    footer {
+      margin-top: 80px;
+      padding-top: 28px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Cutive Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.18em;
+      flex-wrap: wrap;
+      gap: 10px;
+      opacity: 0.5;
+    }
+
+    /* ─── KEYFRAMES ─── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── MOBILE ─── */
+    @media (max-width: 600px) {
+      .header-meta { display: none; }
+      .grid { grid-template-columns: 1fr; }
+      .card-name { font-size: 34px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+
+    <header>
+      <div class="eyebrow">GRUNGEPUNK COLLECTIVE &nbsp;·&nbsp; ALL TOOLS</div>
+      <h1>
+        GRUNGE<span class="slash">//</span>PUNK
+        <span class="sub">APP HUB</span>
+      </h1>
+      <p class="header-desc">
+        A collection of hand-built tools, toys, and experiments.<br>
+        Raw. Functional. Yours.
+      </p>
+      <div class="header-meta">
+        <span class="status-dot"></span>LIVE<br>
+        grungepunk.github.io<br>
+        6 TOOLS DEPLOYED
+      </div>
+    </header>
+
+    <div class="grid-label">TOOLS &amp; APPS</div>
+
+    <div class="grid">
+
+      <a class="card card-glyphrot" href="https://grungepunk.github.io/glyphrot">
+        <span class="card-index">01 ——</span>
+        <span class="card-name">GLYPHROT</span>
+        <span class="card-tag">Text Styler</span>
+        <p class="card-desc">Unicode text transformer. Corrupt, distort, and mutate your words into something that shouldn't exist.</p>
+        <span class="card-arrow">LAUNCH</span>
+      </a>
+
+      <a class="card card-persona" href="https://grungepunk.github.io/persona-chat">
+        <span class="card-index">02 ——</span>
+        <span class="card-name">PERSONA<span style="font-size:0.55em;opacity:0.5">//</span>CHAT</span>
+        <span class="card-tag">OC Chat</span>
+        <p class="card-desc">Chat with custom original characters. Load a persona, start talking. Your OCs, alive and weird.</p>
+        <span class="card-arrow">LAUNCH</span>
+      </a>
+
+      <a class="card card-velvet" href="https://grungepunk.github.io/velvet-room">
+        <span class="card-index">03 ——</span>
+        <span class="card-name">THE VELVET ROOM</span>
+        <span class="card-tag">Blackjack</span>
+        <p class="card-desc">A moody blackjack den with Wild Card Mode. Deal in. The house has taste.</p>
+        <span class="card-arrow">LAUNCH</span>
+      </a>
+
+      <a class="card card-notepad" href="https://grungepunk.github.io/notepad">
+        <span class="card-index">04 ——</span>
+        <span class="card-name">NOTEPAD</span>
+        <span class="card-tag">Editor</span>
+        <p class="card-desc">A minimal, distraction-free writing surface. Grungepunk-flavoured. Just you and the text.</p>
+        <span class="card-arrow">LAUNCH</span>
+      </a>
+
+      <a class="card card-pageforge" href="https://grungepunk.github.io/pageforge">
+        <span class="card-index">05 ——</span>
+        <span class="card-name">PAGEFORGE</span>
+        <span class="card-tag">Page Builder</span>
+        <p class="card-desc">Build and export raw HTML pages. No bloat. No framework. Forge something from scratch.</p>
+        <span class="card-arrow">LAUNCH</span>
+      </a>
+
+      <a class="card card-vibe" href="https://grungepunk.github.io/vibe">
+        <span class="card-index">06 ——</span>
+        <span class="card-name">VIBE</span>
+        <span class="card-tag">Mood</span>
+        <p class="card-desc">Set the atmosphere. Curate a mood, build a feeling. Pure aesthetic on demand.</p>
+        <span class="card-arrow">LAUNCH</span>
+      </a>
+
+    </div>
+
+    <footer>
+      <span>// GRUNGEPUNK · GITHUB.IO</span>
+      <span>BUILT DIFFERENT &nbsp;·&nbsp; RAW HTML &nbsp;·&nbsp; NO FRAMEWORK</span>
+    </footer>
+
+  </div>
+</body>
+</html>
